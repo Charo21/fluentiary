@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model DayRecord {
+  id           String         @id @default(uuid())
+  date         DateTime       @db.Date
+  userId       String?
+  createdAt    DateTime       @default(now())
+  bulletPoints String?        @db.Text
+  blocks       ContentBlock[]
+
+  @@unique([userId, date])
+}
+
+model ContentBlock {
+  id          String          @id @default(uuid())
+  dayRecordId String
+  dayRecord   DayRecord       @relation(fields: [dayRecordId], references: [id], onDelete: Cascade)
+  rawText     String          @db.Text
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  versions    RefineVersion[]
+}
+
+model RefineVersion {
+  id              String          @id @default(uuid())
+  blockId         String
+  block           ContentBlock    @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  parentVersionId String?
+  parent          RefineVersion?  @relation("chain", fields: [parentVersionId], references: [id])
+  children        RefineVersion[] @relation("chain")
+  content         String          @db.Text
+  isEdited        Boolean         @default(false)
+  versionNum      Int             @default(1)
+  llmModel        String?
+  promptTokens    Int?
+  createdAt       DateTime        @default(now())
+}
