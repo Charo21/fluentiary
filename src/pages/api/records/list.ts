@@ -16,12 +16,11 @@ export default async function handler(
     })
 
     const dates = records.map((record) => {
-      const date = new Date(record.date)
-      return date.toISOString().split('T')[0]
+      return record.date.toISOString().split('T')[0]
     })
 
     return res.status(200).json({ dates })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching record dates:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
