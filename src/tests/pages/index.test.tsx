@@ -3,7 +3,7 @@
  */
 import { render, screen, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/router'
-import Home from '../index'
+import Home from '../../pages/index'
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),

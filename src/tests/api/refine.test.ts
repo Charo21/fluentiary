@@ -1,5 +1,5 @@
 import { createMocks } from 'node-mocks-http'
-import handler from '../refine'
+import handler from '../../pages/api/refine'
 import * as geminiModule from '@/lib/gemini'
 
 jest.mock('@/lib/gemini')

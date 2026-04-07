@@ -3,7 +3,7 @@
  */
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { useRouter } from 'next/router'
-import RecordPage from '../[date]'
+import RecordPage from '../../../pages/record/[date]'
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),

@@ -1,5 +1,5 @@
 import { createMocks } from 'node-mocks-http'
-import handler from '../list'
+import handler from '../../../pages/api/records/list'
 import { prisma } from '@/lib/prisma'
 
 describe('/api/records/list', () => {
