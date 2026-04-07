@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { format, subDays } from 'date-fns'
 import Calendar from '../Calendar'
 
 describe('Calendar', () => {
@@ -11,7 +12,7 @@ describe('Calendar', () => {
     expect(screen.getByText(new RegExp(monthName, 'i'))).toBeInTheDocument()
   })
 
-  it('should show green dots for record dates', () => {
+  it('should show green dots for specific record dates', () => {
     const today = new Date()
     const year = today.getFullYear()
     const month = String(today.getMonth() + 1).padStart(2, '0')
@@ -22,7 +23,56 @@ describe('Calendar', () => {
     )
 
     const daysWithRecords = container.querySelectorAll('.has-record')
-    expect(daysWithRecords.length).toBeGreaterThan(0)
+    expect(daysWithRecords.length).toBe(2)
+  })
+
+  it('should disable past dates without records', () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+
+    // Only add a record for today, not for past dates
+    const recordDates = [format(today, 'yyyy-MM-dd')]
+
+    const { container } = render(
+      <Calendar recordDates={recordDates} onDateClick={() => {}} />
+    )
+
+    const disabledDates = container.querySelectorAll('.disabled-date')
+    expect(disabledDates.length).toBeGreaterThan(0)
+  })
+
+  it('should not disable today even without a record', () => {
+    const today = new Date()
+    const { container } = render(
+      <Calendar recordDates={[]} onDateClick={() => {}} />
+    )
+
+    const disabledDates = container.querySelectorAll('.disabled-date')
+    // Today should not be in the disabled dates
+    const todayElement = Array.from(disabledDates).some(el => {
+      const text = el.textContent
+      return text === String(today.getDate())
+    })
+    expect(todayElement).toBe(false)
+  })
+
+  it('should not disable past dates with records', () => {
+    const today = new Date()
+    const pastDate = subDays(today, 5)
+    const pastDateString = format(pastDate, 'yyyy-MM-dd')
+    const recordDates = [pastDateString]
+
+    const { container } = render(
+      <Calendar recordDates={recordDates} onDateClick={() => {}} />
+    )
+
+    const disabledDates = container.querySelectorAll('.disabled-date')
+    const pastDateElement = Array.from(disabledDates).some(el => {
+      const text = el.textContent
+      return text === String(pastDate.getDate())
+    })
+    expect(pastDateElement).toBe(false)
   })
 
   it('should call onDateClick when date is clicked', () => {

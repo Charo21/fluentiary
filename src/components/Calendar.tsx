@@ -1,6 +1,6 @@
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
-import { format } from 'date-fns'
+import { format, isBefore, startOfDay } from 'date-fns'
 
 interface CalendarProps {
   recordDates: string[] // ISO date strings (YYYY-MM-DD)
@@ -11,16 +11,27 @@ export default function Calendar({ recordDates, onDateClick }: CalendarProps) {
   const recordDateSet = new Set(recordDates)
   const today = new Date()
   const todayString = format(today, 'yyyy-MM-dd')
+  const todayStart = startOfDay(today)
 
   const modifiers = {
     hasRecord: (date: Date) => {
       const dateString = format(date, 'yyyy-MM-dd')
       return recordDateSet.has(dateString)
     },
+    disabled: (date: Date) => {
+      const dateString = format(date, 'yyyy-MM-dd')
+      const hasRecord = recordDateSet.has(dateString)
+      const isToday = dateString === todayString
+      const isPast = isBefore(date, todayStart)
+
+      // Disable past dates without records
+      return isPast && !hasRecord && !isToday
+    },
   }
 
   const modifiersClassNames = {
     hasRecord: 'has-record',
+    disabled: 'disabled-date',
   }
 
   const handleDayClick = (date: Date | undefined) => {
@@ -53,12 +64,21 @@ export default function Calendar({ recordDates, onDateClick }: CalendarProps) {
           border-radius: 50%;
           background-color: #10b981;
         }
+        .disabled-date {
+          opacity: 0.5;
+          color: #9ca3af;
+          cursor: not-allowed;
+        }
+        .disabled-date:hover {
+          background-color: transparent;
+        }
       `}</style>
       <DayPicker
         mode="single"
         onDayClick={handleDayClick}
         modifiers={modifiers}
         modifiersClassNames={modifiersClassNames}
+        showOutsideDays={false}
       />
     </div>
   )
