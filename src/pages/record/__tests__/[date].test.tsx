@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { useRouter } from 'next/router'
 import RecordPage from '../[date]'

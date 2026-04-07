@@ -57,7 +57,7 @@ export default function Home() {
 
         {recordDates.length === 0 ? (
           <div className="text-center text-gray-600 mb-8">
-            Click today's date to start writing
+            Click today&apos;s date to start writing
           </div>
         ) : null}
 
