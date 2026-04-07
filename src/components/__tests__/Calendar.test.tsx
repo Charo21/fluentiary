@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { format, subDays } from 'date-fns'
 import Calendar from '../Calendar'
 
@@ -77,11 +77,24 @@ describe('Calendar', () => {
 
   it('should call onDateClick when date is clicked', () => {
     const mockOnClick = jest.fn()
+    const today = new Date()
+    const todayString = format(today, 'yyyy-MM-dd')
 
-    render(<Calendar recordDates={[]} onDateClick={mockOnClick} />)
+    const { container } = render(
+      <Calendar recordDates={[todayString]} onDateClick={mockOnClick} />
+    )
 
-    // This test verifies the callback is passed correctly
-    // Actual click testing would require more complex setup with react-day-picker
-    expect(mockOnClick).toBeDefined()
+    // Find today's date button and click it
+    const dateButtons = container.querySelectorAll('button')
+    const todayButton = Array.from(dateButtons).find(
+      btn => btn.textContent === String(today.getDate())
+    )
+
+    expect(todayButton).toBeDefined()
+    if (todayButton) {
+      fireEvent.click(todayButton)
+      expect(mockOnClick).toHaveBeenCalledWith(todayString)
+      expect(mockOnClick).toHaveBeenCalledTimes(1)
+    }
   })
 })

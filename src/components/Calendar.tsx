@@ -21,11 +21,10 @@ export default function Calendar({ recordDates, onDateClick }: CalendarProps) {
     disabled: (date: Date) => {
       const dateString = format(date, 'yyyy-MM-dd')
       const hasRecord = recordDateSet.has(dateString)
-      const isToday = dateString === todayString
       const isPast = isBefore(date, todayStart)
 
       // Disable past dates without records
-      return isPast && !hasRecord && !isToday
+      return isPast && !hasRecord
     },
   }
 
@@ -48,7 +47,7 @@ export default function Calendar({ recordDates, onDateClick }: CalendarProps) {
   }
 
   return (
-    <div className="calendar-container">
+    <div className="calendar-container" aria-label="Calendar for viewing and selecting practice dates">
       <style jsx global>{`
         .has-record {
           position: relative;
