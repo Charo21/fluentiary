@@ -9,6 +9,9 @@ export async function refineText(text: string): Promise<string> {
 
   const model = genAI.getGenerativeModel({
     model: process.env.LLM_MODEL || 'gemini-2.5-flash',
+    generationConfig: {
+      maxOutputTokens: parseInt(process.env.LLM_MAX_TOKENS || '1024', 10),
+    },
   })
 
   const prompt = `You are an expert English writing coach. Your task is to refine the user's English text to sound more natural and native.
