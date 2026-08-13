@@ -48,7 +48,7 @@ describe('KeyPointsBlock', () => {
     expect(textarea).toHaveAttribute('readOnly')
   })
 
-  it('should have gray background when read-only', () => {
+  it('should use the locked field style when read-only', () => {
     const { container } = render(
       <KeyPointsBlock
         value="Test"
@@ -58,6 +58,6 @@ describe('KeyPointsBlock', () => {
     )
 
     const textarea = container.querySelector('textarea')
-    expect(textarea?.className).toContain('bg-gray-100')
+    expect(textarea?.className).toContain('fl-field--locked')
   })
 })

@@ -10,17 +10,18 @@ export default function KeyPointsBlock({
   readOnly,
 }: KeyPointsBlockProps) {
   return (
-    <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Key Points
-      </label>
+    <div className="fl-block">
+      <div className="fl-block__head">
+        <label htmlFor="key-points" className="fl-label">
+          Key Points
+        </label>
+      </div>
       <textarea
+        id="key-points"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         readOnly={readOnly}
-        className={`w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-          readOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-        }`}
+        className={`fl-field fl-field--sm ${readOnly ? 'fl-field--locked' : ''}`}
         placeholder={readOnly ? '' : 'Enter key points for today...'}
       />
     </div>

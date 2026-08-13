@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Calendar from '@/components/Calendar'
 
@@ -32,39 +33,28 @@ export default function Home() {
     router.push(`/record/${date}`)
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600">{error}</div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          Fluentiary
-        </h1>
+    <>
+      <Head>
+        <title>Fluentiary — Calendar</title>
+      </Head>
 
-        {recordDates.length === 0 ? (
-          <div className="text-center text-gray-600 mb-8">
-            Click today&apos;s date to start writing
-          </div>
-        ) : null}
+      <div className="fl-page">
+        <div className="fl-wordmark">Fluentiary</div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <Calendar recordDates={recordDates} onDateClick={handleDateClick} />
-        </div>
+        {loading ? (
+          <div className="fl-note">Loading…</div>
+        ) : error ? (
+          <div className="fl-note fl-note--error">{error}</div>
+        ) : (
+          <main className="fl-card">
+            {recordDates.length === 0 && (
+              <div className="fl-note">Click today&apos;s date to start writing</div>
+            )}
+            <Calendar recordDates={recordDates} onDateClick={handleDateClick} />
+          </main>
+        )}
       </div>
-    </div>
+    </>
   )
 }

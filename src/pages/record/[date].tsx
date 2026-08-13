@@ -1,9 +1,36 @@
 import { useEffect, useState } from 'react'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import KeyPointsBlock from '@/components/KeyPointsBlock'
 import FreeWriteBlock from '@/components/FreeWriteBlock'
 import RefinedTextBlock from '@/components/RefinedTextBlock'
 import type { DailyRecord } from '@/types/record'
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function formatDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return { head: value, year: '' }
+
+  const [, year, month, day] = match
+  return {
+    head: `${MONTHS[Number(month) - 1]} ${Number(day)}`,
+    year,
+  }
+}
 
 export default function RecordPage() {
   const router = useRouter()
@@ -95,60 +122,69 @@ export default function RecordPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600">{error}</div>
-      </div>
-    )
-  }
+  const heading = formatDate(typeof date === 'string' ? date : '')
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-6">
-          <button
-            onClick={() => router.push('/')}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            ← Back to Calendar
-          </button>
-        </div>
+    <>
+      <Head>
+        <title>{`Fluentiary — ${typeof date === 'string' ? date : 'Entry'}`}</title>
+      </Head>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            {date}
-          </h1>
+      <div className="fl-page">
+        <div className="fl-wordmark">Fluentiary</div>
 
-          <KeyPointsBlock
-            value={keyPoints}
-            onChange={setKeyPoints}
-            readOnly={readOnly}
-          />
+        {loading ? (
+          <div className="fl-note">Loading…</div>
+        ) : error ? (
+          <div className="fl-note fl-note--error">{error}</div>
+        ) : (
+          <main style={{ width: '100%', maxWidth: 760 }}>
+            <button type="button" className="fl-back" onClick={() => router.push('/')}>
+              &larr; Back to Calendar
+            </button>
 
-          <FreeWriteBlock
-            value={freeWrite}
-            onChange={setFreeWrite}
-            readOnly={readOnly}
-          />
+            <div className="fl-card">
+              <div className="fl-record-head">
+                <h1 className="fl-record-date">
+                  {heading.head} <span className="fl-record-date__dim">{heading.year}</span>
+                </h1>
+                <span className={`fl-chip ${isToday ? 'fl-chip--edit' : ''}`}>
+                  <span className="fl-chip__key" />
+                  {isToday ? 'Today · editable' : 'Past entry · view only'}
+                </span>
+              </div>
 
-          <RefinedTextBlock
-            value={refinedText}
-            onChange={setRefinedText}
-            onRefine={handleRefine}
-            readOnly={readOnly}
-            loading={refining}
-          />
-        </div>
+              <KeyPointsBlock
+                value={keyPoints}
+                onChange={setKeyPoints}
+                readOnly={readOnly}
+              />
+
+              <FreeWriteBlock
+                value={freeWrite}
+                onChange={setFreeWrite}
+                readOnly={readOnly}
+              />
+
+              <RefinedTextBlock
+                value={refinedText}
+                onChange={setRefinedText}
+                onRefine={handleRefine}
+                readOnly={readOnly}
+                loading={refining}
+              />
+
+              {isToday && (
+                <div className="fl-foot">
+                  <span className="fl-legend__item">
+                    Changes are saved automatically.
+                  </span>
+                </div>
+              )}
+            </div>
+          </main>
+        )}
       </div>
-    </div>
+    </>
   )
 }

@@ -10,17 +10,18 @@ export default function FreeWriteBlock({
   readOnly,
 }: FreeWriteBlockProps) {
   return (
-    <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Free Write
-      </label>
+    <div className="fl-block">
+      <div className="fl-block__head">
+        <label htmlFor="free-write" className="fl-label">
+          Free Write
+        </label>
+      </div>
       <textarea
+        id="free-write"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         readOnly={readOnly}
-        className={`w-full h-48 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-          readOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-        }`}
+        className={`fl-field fl-field--lg ${readOnly ? 'fl-field--locked' : ''}`}
         placeholder={readOnly ? '' : 'Write freely in English...'}
       />
     </div>
