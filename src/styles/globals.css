@@ -526,3 +526,21 @@ body {
     transition-duration: 0ms !important;
   }
 }
+
+/* Account controls follow the journal's existing type and color system. */
+.fl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  max-width: 760px;
+  margin-bottom: 26px;
+}
+.fl-header .fl-wordmark { margin-bottom: 0; }
+.fl-account { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+.fl-account > span { max-width: 240px; overflow-wrap: anywhere; }
+.fl-login { max-width: 520px; text-align: center; }
+.fl-login h1 { font-family: 'Fraunces', serif; font-size: clamp(28px, 5vw, 38px); font-weight: 500; line-height: 1.2; }
+.fl-login > .fl-btn { margin: 20px auto; padding: 12px 24px; font-weight: 500; }

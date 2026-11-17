@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fluentiary
 
-## Getting Started
+English writing journal built with Next.js Pages Router, React, TypeScript, Prisma/PostgreSQL, Gemini, and Google authentication through NextAuth.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If `.env` already exists, add the missing entries rather than replacing it. Configure `DATABASE_URL`, `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_URL` and `NEXTAUTH_SECRET`. The aliases `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and `AUTH_SECRET` are also supported; the corresponding `GOOGLE_CLIENT_*` and `NEXTAUTH_SECRET` values take precedence when present. Set `NEXTAUTH_URL` explicitly for NextAuth 4.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Generate the session secret with `openssl rand -base64 32`; keep it private and stable across deployments.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+In Google Cloud Console, configure an OAuth consent screen and an OAuth client with application type **Web application**. Add the development redirect URI:
 
-## Learn More
+```text
+http://localhost:3000/api/auth/callback/google
+```
 
-To learn more about Next.js, take a look at the following resources:
+For deployment, add `https://YOUR_DOMAIN/api/auth/callback/google` and set `NEXTAUTH_URL=https://YOUR_DOMAIN`. If the consent screen is in testing mode, add the Google accounts that will test the app as test users. Do not put client secrets or the session secret in `NEXT_PUBLIC_*` variables.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Apply database migrations separately from the build:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run db:migrate
+npm run dev
+```
 
-## Deploy on Vercel
+**The Google authentication migration deletes existing ownerless journal entries, as approved for this project.** It creates `User` and `Account`, associates every new record with a user, and replaces the global date constraint with `(userId, date)` uniqueness. Apply it to the intended database. It does not create `Session` or `VerificationToken` tables.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000). Anonymous visitors are sent to `/login`. Google sign-in automatically registers a user on first login; returning users keep the same internal user ID. The app does not store avatars, passwords or email verification fields, and does not send verification emails.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Source structure
+
+```text
+src/
+├── pages/                         # Next.js route entries and server page guards
+│   ├── _app.tsx                   # SessionProvider + CommonStatusProvider
+│   ├── login.tsx
+│   ├── index.tsx
+│   ├── record/[date].tsx
+│   └── api/                       # Auth, journal, refinement and cron routes
+├── common/status/                 # Shared local clock and current account hooks
+├── features/
+│   ├── auth/                      # Login/account UI, JWT options, adapter and guards
+│   ├── calendar/                  # Calendar components and record-date loading
+│   ├── records/                   # Editor, lifecycle hooks, per-user API handlers/types
+│   └── refinement/                # Refinement handler, retries and contracts
+├── lib/                           # Prisma client and Gemini SDK integration
+└── styles/                        # Global styles
+```
+
+Keep related code/tests in each feature. Server implementations belong under `server/`; client code must not import authentication options, Prisma, or provider tokens. This project uses Pages Router, so `src/app/` is not a general application folder.
+
+## Common status
+
+The provider is already mounted globally. Use the combined hook when a component needs both clock and account:
+
+```tsx
+import { useCommonStatus } from '@/common/status'
+
+const { localNow, localDate, authStatus, account } = useCommonStatus()
+// localNow: ISO local timestamp with timezone offset, refreshed every second, initially null for SSR.
+// localDate: YYYY-MM-DD in the browser’s local timezone, initially null.
+// authStatus: 'loading' | 'authenticated' | 'unauthenticated'.
+// account: { id, name, email } when authenticated, otherwise null.
+```
+
+Use `useCurrentAccount()` for account-only components and `useLocalClock()` for clock-only components. Account-only consumers do not re-render every second. Authentication state comes directly from SessionProvider; there is no separate writable account store or localStorage token. Handle `loading` and `null` before rendering account/clock values.
+
+Local time uses the browser’s timezone and device clock and refreshes when the tab becomes visible. It is a display value, not a trusted server timestamp. Server endpoints authenticate requests independently using the session; passing a `userId` in a request cannot select another user's data.
+
+## Checks
+
+```bash
+npm run test:unit -- --runInBand
+npx prisma validate
+npx tsc --noEmit --incremental false
+npm run lint
+npm run build
+```
+
+`npm run build` generates the Prisma client and builds Next.js; it does **not** change the database. `npm run db:migrate` is the explicit migration command.
+
+The full suite includes a real Gemini API call and requires credentials/network access:
+
+```bash
+npm test -- --runInBand
+```
+
+Record database integration tests are opt-in. They require `TEST_DATABASE_URL` and `DATABASE_URL` to point to the same disposable test database with migrations applied. They reset records belonging to their integration test user:
+
+```bash
+npm test -- --runInBand --testMatch='**/features/records/server/tests/*.test.ts'
+```
+
+Mocked authentication tests cover JWT/session mapping, registration adapter fields, page guards, per-user queries and lifecycle cancellation. Verify a real Google redirect/login/logout with configured credentials before deployment; those tests do not replace OAuth end-to-end verification.
+
+The `/api/cron/keepalive` endpoint retains its separate `CRON_SECRET` bearer authentication and does not use an end-user session.
